@@ -1,0 +1,1 @@
+/usr/bin/c++      -rdynamic CMakeFiles/aerotap_PalmTrack.dir/src/Sample.cpp.o CMakeFiles/aerotap_PalmTrack.dir/src/main.cpp.o  -o aerotap_PalmTrack  -L/home/pi/aeroTAP/sample/PalmTrack/../../lib/linux_arm -Wl,-rpath,/home/pi/aeroTAP/sample/PalmTrack/../../lib/linux_arm -lglut -lGL -laeroTAP-sdk -ljpeg 

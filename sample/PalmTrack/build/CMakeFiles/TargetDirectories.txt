@@ -1,0 +1,3 @@
+/home/pi/aeroTAP/sample/PalmTrack/build/CMakeFiles/rebuild_cache.dir
+/home/pi/aeroTAP/sample/PalmTrack/build/CMakeFiles/aerotap_PalmTrack.dir
+/home/pi/aeroTAP/sample/PalmTrack/build/CMakeFiles/edit_cache.dir
