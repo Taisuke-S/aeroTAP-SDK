@@ -4,13 +4,19 @@
 //
 //
 
-// 2021.1013 Update
+## 2021.1013 Update
 - Now support aeroTAP 3D G2 camera
 - Now detects USB mode ( 2.0 or 3.0 )
 - Now detects appropriate /dev/video? for color image and depth image
 - Now load ZDTable from camera
 
+## Supported Camera
+aeroTAP 3D USB Camera  3cm Baseline
+aeroTAP 3D USB G2 Camera 3cm Baseline
+aeroTAP 3D USB GS Camera 6cm Baseline
+for more detail information, please vist https://www.aerotap.com
 
+##Contents
 /lib
    /linux64  
 	Ubuntu 16  x64
