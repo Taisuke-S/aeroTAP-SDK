@@ -11,9 +11,10 @@
 - Now load ZDTable from camera
 
 ## Supported Camera
-aeroTAP 3D USB Camera  3cm Baseline
-aeroTAP 3D USB G2 Camera 3cm Baseline
-aeroTAP 3D USB GS Camera 6cm Baseline
+ - aeroTAP 3D USB Camera  3cm Baseline
+ - aeroTAP 3D USB G2 Camera 3cm Baseline
+ - aeroTAP 3D USB GS Camera 6cm Baseline
+
 for more detail information, please vist https://www.aerotap.com
 
 ##Contents
