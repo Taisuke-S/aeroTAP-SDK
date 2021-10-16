@@ -24,8 +24,15 @@
 /sample
    Sample code using OpenGL
 
+// Truble Shooting
+1. Error with VIDIC_STREAMON error 28, No space left on device
+
+sudo rmmod uvcvideo
+sudo modprobe uvcvideo nodrop=1 quirks=128
 
 
+2. USB3.0port on ubuntu
+use USB2.0 connector
 
 
 
