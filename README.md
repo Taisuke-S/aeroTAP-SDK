@@ -1,8 +1,12 @@
 //
 //  aeroTAP SDK for Linux
-//  2021.10.13
+//  2021.10.20
 //
 //
+
+## 2021.1020 Update
+Fixed Streaming Index for Color
+Fixed Open with USB20 
 
 ## 2021.1013 Update
 - Now support aeroTAP 3D G2 camera
