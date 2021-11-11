@@ -22,6 +22,8 @@ bool aeroTAPGLSample::init(const std::string& video0,const std::string& video1,i
 	_width=640;
 	_height = 480;
 
+	camera.setVerbose(true);
+
 	if ( !camera.checkDevice() )
 	{
 		std::cout << "Error! no aeroTAP camera " << std::endl;
@@ -57,6 +59,7 @@ bool aeroTAPGLSample::init(const std::string& video0,const std::string& video1,i
 		return false;
 	}
 	camera.enablePalmTracker(true);
+	camera.setPalmDetectMode(HANDMODE_CLICK);
 	
 	_width = camera.getResWidth();
 	_height = camera.getResHeight();	
@@ -175,15 +178,24 @@ bool aeroTAPGLSample::update()
 		HANDRESULT result[2];
 		if ( camera.getPalmTrackResult(result) )
 		{
-			std::cout << "Camera detects Hand!" << std::endl;
 			for(int i=0;i<2;++i)
 			{
+				bool mode = result[i].nObjectType>0?true:false;
+				if ( mode )
+							std::cout << "Camera detects Close Hand!"  << std::endl;
+				else
+							std::cout << "Camera detects Hand!" <<  std::endl;
+				
 				int x = result[i].rect.left;
 				int y = result[i].rect.top;
 				int w = result[i].rect.right-result[i].rect.left;
 				int h = result[i].rect.bottom - result[i].rect.top;
-				renderHand( x, y, w, h);
+				renderHand( x, y, w, h, mode);
 			}
+		}
+		else
+		{
+			std::cout << "...no Hand" <<  std::endl;
 		}		
 	}
 	catch (const exception& e)
@@ -343,7 +355,7 @@ void aeroTAPGLSample::onNewQVGAFrame(uint8_t*frame)
 }
 
 // Render prepared background texture
-void aeroTAPGLSample::renderHand(int x, int y, int w, int h)
+void aeroTAPGLSample::renderHand(int x, int y, int w, int h, bool mode)
 {
 #if 1
 //    glMatrixMode( GL_PROJECTION );
@@ -354,8 +366,10 @@ void aeroTAPGLSample::renderHand(int x, int y, int w, int h)
     glLoadIdentity();
 
 //	glTranslatef( 0.5, 0.5, 0 );
-
-    glColor3ub( 255, 0, 0 );
+	if ( mode )
+		glColor3ub( 0, 255, 255 );
+	else
+		glColor3ub( 255, 0, 0 );
     glBegin(GL_LINE_LOOP);
     glVertex2f( x, y );
     glVertex2f( x+w, y );

@@ -1,8 +1,13 @@
 //
 //  aeroTAP SDK for Linux
-//  2021.10.20
+//  2021.11.11
 //
 //
+## 2021.11/11 Update
+Fixed issue with Palmtracking, updated sample code
+Fixed issue with FPS
+Fixed issue that aeroTAP 3D USB connecting USB3.0
+Compiled with OepnMP to improve palm tracking.
 
 ## 2021.1020 Update
 Fixed Streaming Index for Color

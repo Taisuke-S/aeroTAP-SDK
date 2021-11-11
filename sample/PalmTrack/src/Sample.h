@@ -93,7 +93,7 @@ private:
 	 */
 	void renderTexture();
 	void renderLines();
-	void renderHand(int x, int y, int w, int h);
+	void renderHand(int x, int y, int w, int h, bool mode);
 	
 	void initTexture(int width, int height);
 };
