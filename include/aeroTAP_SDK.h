@@ -173,7 +173,7 @@ struct aeroTAPdata {
 		int getPType() { return aeroData.nPType; };
 		void setFPS(int fps) { aeroData.nFPS = fps; };
 		bool getUserData(void *pUserData);
-		uint8_t getPID();
+		uint16_t getPID();
 
 
 		// Check /dev/video list to find aeroTAP Camera
