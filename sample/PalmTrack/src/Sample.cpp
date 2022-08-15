@@ -175,11 +175,14 @@ bool aeroTAPGLSample::update()
 			std::cout << "Camera Connection Lost Detected!" << std::endl;
 			_isConnectionLost = true;
 		}
+		
 		HANDRESULT result[2];
 		if ( camera.getPalmTrackResult(result) )
 		{
 			for(int i=0;i<2;++i)
 			{
+				if ( !result[i].bUsed )
+					continue;
 				bool mode = result[i].nObjectType>0?true:false;
 				if ( mode )
 							std::cout << "Camera detects Close Hand!"  << std::endl;
@@ -190,6 +193,9 @@ bool aeroTAPGLSample::update()
 				int y = result[i].rect.top;
 				int w = result[i].rect.right-result[i].rect.left;
 				int h = result[i].rect.bottom - result[i].rect.top;
+
+				std::cout << "x: " << result[i].rect.left << ", y: " << result[i].rect.top << ", right: " << result[i].rect.right<< ", bottom: " << result[i].rect.bottom<<   std::endl;
+				std::cout << "x: " << result[i].pCenter.x << ", y: " << result[i].pCenter.y << ", z: " << result[i].pCenter.z<<   std::endl;
 				renderHand( x, y, w, h, mode);
 			}
 		}
@@ -360,7 +366,7 @@ void aeroTAPGLSample::renderHand(int x, int y, int w, int h, bool mode)
 #if 1
 //    glMatrixMode( GL_PROJECTION );
 //    glLoadIdentity();
-    glOrtho( 0, 640, 480, 0, -1, 1);
+    glOrtho( 0, _width, _height, 0, -1, 1);
     
     glMatrixMode( GL_MODELVIEW );
     glLoadIdentity();

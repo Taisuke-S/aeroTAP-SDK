@@ -1,11 +1,18 @@
 #include <cstdlib>
 #include <cstring>
+#include <cstdio>
 #include <iostream>
+#include <sstream>
+#include <fstream>
 #include "Sample.h"
-
+#include <sys/ioctl.h>
+#include <sys/stat.h>
 #include <GL/glut.h>
 //#include "../../include/aeroTAP.h"
+#include <fcntl.h>
 #include <iostream>
+#include <libudev.h>
+
 
 using namespace std;
 using namespace aerotap;
@@ -124,7 +131,7 @@ int main(int argc, char* argv[])
 			}
 			else
 			if ( argv[i][1]=='v' )
-			{
+			{	
 				if (i>0 && c<2)
 				{
 					std::cout << "---- " << argv[i] << std::endl;
@@ -140,6 +147,7 @@ int main(int argc, char* argv[])
 	if ( bMJPG )
 		std::cout << "- Use MJPG for color streaming"<< std::endl;
 	
+
 	sample.init(video[0],video[1],res, bMJPG,nFilter,bUSB20, fps);
 
 	OutputMode outputMode = sample.getOutputMode();

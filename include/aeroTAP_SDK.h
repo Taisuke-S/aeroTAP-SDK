@@ -35,8 +35,8 @@ namespace aerotap
 struct RECT
 {
 	int32_t left;
-	int32_t right;
 	int32_t top;
+	int32_t right;
 	int32_t bottom;
 };
 
@@ -158,7 +158,7 @@ struct aeroTAPdata {
 		void updateFrame();
 		void setFilter(int nFilter) { aeroData.nFilter = nFilter; };
 		void useMJPG(bool bMode) { aeroData.bUseMJPG = bMode; };
-		bool getUSB20() { return aeroData.bUSB20; };
+		bool getUSB20();
 		void setUSB20(bool bUSB20) { aeroData.bUSB20 = bUSB20; };
 		// Module Path to load ZDTable txt file
 		void setModulePath(void *module) { modulePath=module; };

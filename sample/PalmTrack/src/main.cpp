@@ -82,7 +82,7 @@ int main(int argc, char* argv[])
 	int nFilter = 0;
 	bool bMJPG = false;
 	bool bUSB20 = false;
-	int res =1; //vga 
+	int res =0; //qvga 
 	int fps =30;
 	// Prepare sample to work
 	int c=0;
