@@ -475,8 +475,9 @@ def ReadDepth():
 #        deserialized = np.reshape(np.frombuffer(depth16,dtype=np.uint8), newshape=(camHeight, camWidth,2))
         return depth16
     else:
-        deserialized_resized = depth_buffer[40:camWidth*camHeight*2+40]
-        return deserialized_resized
+        depth16 = np.frombuffer(depth_buffer[40:camWidth*camHeight*2+40],dtype=np.uint16)
+
+        return depth16
 # for dmin2
 #        buffer = deserialized_resized.tobytes()
 #        deserialized = np.reshape(np.frombuffer(buffer,dtype=np.uint16), newshape=(camHeight, camWidth,1))
@@ -490,7 +491,7 @@ def DepthToRGB(depth):
 def DepthToRGB(depth):
     global lib,camID ,os, imgDepth,depth_buffer,camWidth,camHeight,bEnableDepthFilter ,camMode,ColorPalette
 
-    deserialized = np.reshape(np.frombuffer(depth,dtype=np.uint8),newshape=(camHeight,camWidth,2))
+    deserialized = np.reshape(np.frombuffer(depth.tobytes(),dtype=np.uint8),newshape=(camHeight,camWidth,2))
     imgDepth[:,:,1:3] = deserialized
     return None
 

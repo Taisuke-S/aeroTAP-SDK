@@ -5,8 +5,6 @@ Python library for aeroTAP 3D USB Camera
 Created on Wed Aug  3 23:24:01 2022
 @author: nextEDGE Technology
 
-    Note: Requires Python version 3.7 or later
-
 """
 __author__ = "nextEDGE Technology"
 __copyright__ = "Copyright (C) 2022 nextEDGE Technology K.K."
@@ -25,7 +23,7 @@ import numpy as np
 import cv2
 import struct
 import ZDColorPalette
-$ wget https://www.python.org/ftp/python/3.9.2/Python-3.9.2.tar.xz
+
 if os.name == "nt":
     from ctypes.wintypes import BOOL, HWND, LPARAM
     class HandResultWin(Structure):
@@ -480,8 +478,9 @@ def ReadDepth():
 #        deserialized = np.reshape(np.frombuffer(depth16,dtype=np.uint8), newshape=(camHeight, camWidth,2))
         return depth16
     else:
-        deserialized_resized = depth_buffer[40:camWidth*camHeight*2+40]
-        return deserialized_resized
+        depth16 = np.frombuffer(depth_buffer[40:camWidth*camHeight*2+40],dtype=np.uint16)
+
+        return depth16
 # for dmin2
 #        buffer = deserialized_resized.tobytes()
 #        deserialized = np.reshape(np.frombuffer(buffer,dtype=np.uint16), newshape=(camHeight, camWidth,1))
