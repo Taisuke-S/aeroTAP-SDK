@@ -26,6 +26,9 @@ sudo apt install cmake
 //
 // Updates 
 //
+#2022.8.18
+- Updated library for cam2web enhancement
+
 #2022.8.12
 - Includes the latest library
 - Added Python library

@@ -1,39 +1,40 @@
-//
-//  aeroTAP SDK for Linux
+# aeroTAP SDK for linux
 //  2022.8.12
 //  Copyright nextEDGE Technology
-//
 
-//
-// Notes 
-//
+This is linux library for aeroTAP 3D USB Camera.
+
+
+# Notes 
+
 Python library requires Python version 3.8 and up
 Set LD_LIBRAR_PATH to use library
 i.e for Raspberry pi
+```
 export LD_LIBRARY_PATH=/home/pi/aeroTAP/lib/linux_arm
+```
 
-//
-// Requirements
-//
+# Requirements
+```
 sudo apt install libusb-dev
 sudo apt install libudev-dev freeglut3-dev
 sudo apt install libv4l-dev
 sudo apt install libpng-dev libjpeg-dev
 
 sudo apt install cmake
+```
 
 
-//
-// Updates 
-//
-#2022.8.12
+# Updates 
+##2022.8.18
+- Updated library for cam2web enhancement
+
+## 2022.8.12
 - Includes the latest library
 - Added Python library
 - Update sample source code
 
-//
-// Contents
-//
+# Contents
 
 /lib
    /linux64  
@@ -51,7 +52,7 @@ sudo apt install cmake
    Sample code using OpenGL
 
 
-// Truble Shooting
+# Truble Shooting
 1. Error with VIDIC_STREAMON error 28, No space left on device
 
 sudo rmmod uvcvideo

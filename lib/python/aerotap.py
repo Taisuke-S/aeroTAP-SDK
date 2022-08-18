@@ -526,6 +526,20 @@ def UpdateFrame():
         lib.aerotap_updateFrame.argtypes = [ctypes.c_void_p]
         return lib.aerotap_updateFrame(obj)
 
+"""
+def Version():
+    get SDK version
+"""
+def Version():
+    global lib,obj, os
+
+    if not os.name == "nt":
+# Linex
+        lib.aerotap_version.argtypes = [ctypes.c_void_p]
+        lib.aerotap_version.restype = ctypes.c_char_p
+        return lib.aerotap_version(obj)
+
+
 
 #
 #  aerotap 
@@ -548,7 +562,7 @@ else:
     lib = ctypes.CDLL("libaeroTAP-sdk.so")
     lib.aerotap_create.restype = c_void_p
     obj = lib.aerotap_create()
-
+    print("SDK version is", Version())
 #print("Loaded aeroTAPA_CAM.DLL")
 
 BMlen = 40 #sys.getsizeof(BITMAPINFOHEADER())
