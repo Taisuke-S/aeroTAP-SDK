@@ -9,7 +9,7 @@ Created on Wed Aug  3 23:24:01 2022
 __author__ = "nextEDGE Technology"
 __copyright__ = "Copyright (C) 2022 nextEDGE Technology K.K."
 __license__ = "Public Domain"
-__version__ = "1.0"
+__version__ = "1.02"
 
 import os
 import sys
@@ -676,7 +676,7 @@ if os.name == "nt":
     except (KeyError, ValueError):
         print("Error loading aeroTAPA_CAM.DLL {ValueError}")
 else:
-    lib = ctypes.CDLL("./libaeroTAP-sdk.so")
+    lib = ctypes.CDLL("libaeroTAP-sdk.so")
     lib.aerotap_create.restype = c_void_p
     obj = lib.aerotap_create()
 
