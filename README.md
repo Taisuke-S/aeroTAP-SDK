@@ -9,7 +9,7 @@ This is linux library for aeroTAP 3D USB Camera.
 
 Python library requires Python version 3.8 and up
 Set LD_LIBRAR_PATH to use library
-i.e for Raspberry pi
+i.e for Raspberry pi4
 ```
 export LD_LIBRARY_PATH=/home/pi/aeroTAP/lib/linux_arm
 ```
@@ -59,7 +59,7 @@ sudo rmmod uvcvideo
 sudo modprobe uvcvideo nodrop=1 quirks=128
 
 
-2. USB3.0port on ubuntu
+2. USB3.0 port on ubuntu
 use USB2.0 connector
 
 

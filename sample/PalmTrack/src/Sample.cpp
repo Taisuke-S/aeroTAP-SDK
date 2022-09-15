@@ -35,6 +35,7 @@ bool aeroTAPGLSample::init(const std::string& video0,const std::string& video1,i
 	camera.useMJPG(bMJPG);
 	camera.setUSB20(bUSB20);
 	camera.setFilter(nFilter);
+	int nPType = camera.getPType();
 	switch (res)
 	{
 		case 0:
@@ -44,6 +45,8 @@ bool aeroTAPGLSample::init(const std::string& video0,const std::string& video1,i
 		case 2:
 		_width=640;
 		_height = 400;
+		if ( nPType ==3 ) // G2
+		_height = 360;
 			break;
 		case 3:
 		_width=1280;
