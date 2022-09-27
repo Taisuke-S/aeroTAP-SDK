@@ -52,7 +52,7 @@ sudo apt install cmake
    Sample code using OpenGL
 
 
-# Truble Shooting
+# Trouble Shooting
 1. Error with VIDIC_STREAMON error 28, No space left on device
 
 sudo rmmod uvcvideo
