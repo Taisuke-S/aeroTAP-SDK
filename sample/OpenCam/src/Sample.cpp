@@ -36,6 +36,9 @@ bool aeroTAPGLSample::init(const std::string& video0,const std::string& video1,i
 	camera.useMJPG(bMJPG);
 	camera.setUSB20(bUSB20);
 	camera.setFilter(nFilter);
+	string sn = string(camera.getSN());
+	std::cout << "SerialNo: " << sn << std::endl;
+
 	int nPType = camera.getPType();
 	switch (res)
 	{
@@ -101,14 +104,10 @@ bool aeroTAPGLSample::open()
 }
 bool aeroTAPGLSample::update()
 {
-	if ( !_isNewView )
-	{
-		// Create texture by DepthSensor output mode
-		initTexture(_width, _height);
-		_isNewView = true;
-	}
 	if (!_isInitialized)
 	{
+		// Create texture by DepthSensor output mode
+//		initTexture(_width, _height);
 #if 0
 		for( int i=0;i<2;++i)
 		{
@@ -122,7 +121,8 @@ bool aeroTAPGLSample::update()
 		{
 			camera.start();
 			nZDTableLen = camera.getZDTable(zdTable);
-
+			std::cout << nZDTableLen << std::endl;
+//			printf("ZDTable size:%d\n", nZDTableLen);
 		}
 		catch (const exception& e)
 		{
@@ -158,17 +158,30 @@ bool aeroTAPGLSample::update()
 //		std::cout << "req new frame" << std::endl;
 		if ( camera.isNewFrame() )
 		{		
-#if 0		
+#if 1		
 		std::cout << "new frame" << std::endl;
+		const uint16_t* depthPtr = camera.getDepthData();
+		for (size_t i = 0; i < _height; ++i)
+		{
+			for (size_t j = 0; j < _width; ++j)
+			{
+				uint16_t depthValue = *depthPtr;
+				std::cout << depthValue << std::endl;
+//				printf("%d ", depthValue);
+				++depthPtr;
+			}
+		}
+//		printf("\n");
+
 #else
 //		std::cout << "-got frame" << std::endl;
 			onNewRGBFrame( camera.getColorData() );
 			onNewGrayFrame( camera.getGrayData() );
-			onNewDepthFrame( camera.getDepthData() );
 
-			camera.updateFrame();
+			onNewDepthFrame( camera.getDepthData() );
 			renderTexture();
 #endif
+			camera.updateFrame();
 		}
 		else
 		if ( camera.isConnectionLost() )
@@ -264,8 +277,6 @@ void aeroTAPGLSample::onNewRGBFrame(uint8_t*frame)
 	uint8_t* texturePtr = _textureBuffer;
 	uint8_t*colorPtr = frame;
 	memcpy(texturePtr,colorPtr,_height*_width*3);
-//	std::cout << "onNewRGBFrame!" <<_width << ", " << _height << std::endl;
-
 }
 void aeroTAPGLSample::onNewGrayFrame(uint8_t*frame)
 {
@@ -277,40 +288,3 @@ void aeroTAPGLSample::onNewGrayFrame(uint8_t*frame)
 	memcpy(texturePtr,colorPtr,_height*_width);
 }
 
-// Render prepared background texture
-void aeroTAPGLSample::renderTexture()
-{
-	glBindTexture(GL_TEXTURE_2D, _textureID);
-	if ( _viewMode == GRAY_MODE )
-		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, _width, _height, GL_LUMINANCE, GL_UNSIGNED_BYTE, _textureBuffer);
-	else
-		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, _width, _height, GL_RGB, GL_UNSIGNED_BYTE, _textureBuffer);
-
-//std::cout << "renderTexture!" <<_width << ", " << _height << std::endl;
-
-}
-
-void aeroTAPGLSample::initTexture(int width, int height)
-{		
-	if (_textureBuffer != 0)
-		delete[] _textureBuffer;
-	
-	_textureBuffer = new uint8_t[width * height * 3];
-	memset(_textureBuffer, 0, sizeof(uint8_t) * width * height * 3);
-	
-	_width = width;
-	_height = height;
-
-    glGenTextures(1, &_textureID);  // テクスチャIDを生成
-    glBindTexture(GL_TEXTURE_2D, _textureID);  // 2Dテクスチャをバインド
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, _width, _height, 0,GL_RGB, GL_UNSIGNED_BYTE, _textureBuffer);
-
-	std::cout << "initTexture!" <<_width << ", " << _height << std::endl;
-
-}

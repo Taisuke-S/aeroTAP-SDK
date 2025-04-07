@@ -155,8 +155,10 @@ struct aeroTAPdata {
 		bool open(const char *video0, const char *video1, int width, int height);
 		bool start();
 		void stop();
+		void release();
 		int getFD();
 		char *getProductName();
+		char *getSN();
 		bool isNewFrame();
 		void updateFrame();
 		void setFilter(int nFilter) { aeroData.nFilter = nFilter; };

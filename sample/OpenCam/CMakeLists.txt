@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.8)
 
-set(PROJECT_NAME aerotap_RGBD)
+set(PROJECT_NAME openCam)
 set(CMAKE_SYSTEM_PROCESSOR arm)
 
 project(${PROJECT_NAME} LANGUAGES C CXX)
@@ -10,7 +10,7 @@ add_definitions(-std=c++03 -D_GLIBCXX_USE_CXX11_ABI=0)
 set(AEROTAP_INCLUDE_PATH ${CMAKE_CURRENT_LIST_DIR}/../../include)
 
 if(UNIX)
-	set(OPENGL_LIBS glut GL GLU)
+	set(OPENGL_LIBS glut GL)
 	IF (CMAKE_SYSTEM_PROCESSOR MATCHES "^aarch64")
 		set(PLATFORM_DIR linux_aarch64)
 		set(CMAKE_CXX_COMPILER "/usr/bin/g++")

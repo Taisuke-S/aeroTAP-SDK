@@ -36,6 +36,7 @@ include_directories(
 )
 
 link_directories(${AEROTAP_LIBRARY_PATH})
+link_directories(/opt/libjpeg8/lib)
 
 set(SOURCES
     src/main.cpp)

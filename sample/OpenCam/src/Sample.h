@@ -31,8 +31,6 @@ class aeroTAPGLSample
 public:
 	aeroTAPGLSample() {
 		_isInitialized=false;
-		_isNewView = false;
- 
 		_modesNumber = MODES_MAX_COUNT;
 		for( int i=0;i<2;++i)
 		{
@@ -61,28 +59,23 @@ public:
 	void nextViewMode()
 	{
 		_viewMode = (ViewMode)(((uint32_t)_viewMode + 1) % _modesNumber);
-//		std::cout << _viewMode << std::endl;
-		_isNewView = false;
-
 	}
-
-	// GL data
-	GLuint _textureID;
 
 private:
 	int _width, _height;
 	OutputMode _outputMode;
 	
 	aeroTAP camera;
+	// GL data
+	GLuint _textureID;
 	uint8_t* _textureBuffer;
-//	GLfloat _textureCoords[8];
-//	GLfloat _vertexes[8];
-	bool bInit;	
+	GLfloat _textureCoords[8];
+	GLfloat _vertexes[8];
+	
 	ViewMode _viewMode;
 	uint32_t _modesNumber;
 	bool _isInitialized;
 	bool _isConnectionLost;
-	bool _isNewView;
 
 // Sample if use UserBuffer
 	unsigned char *pColor[2];

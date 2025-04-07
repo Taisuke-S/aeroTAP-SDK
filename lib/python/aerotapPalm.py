@@ -377,37 +377,36 @@ def GetLastError():
 """
 def Read(mode)
     Read color image from camera
-    mode =0: Color Image, mode ==1: Grayscale
+    mode =7: Color Image, mode ==1: Grayscale
+    mode =11: Color Fliped, 
     returns np 3dim in BGR or 1dim Grayscale image
 """
 def Read(mode):
     global lib,obj,os,camID ,img_buffer,depth_buffer,camWidth,camHeight,cBMIH 
 
-    if mode>1:
-        mode =0
     if os.name == "nt":
         lib.AERO_GetImage.restype = ctypes.wintypes.BOOL
-        lib.AERO_GetImage.argtypes = [ctypes.POINTER(ctypes.wintypes.LPBYTE),ctypes.wintypes.INT,ctypes.POINTER(ctypes.wintypes.INT),ctypes.POINTER(ctypes.wintypes.INT),ctypes.POINTER(ctypes.wintypes.INT),ctypes.POINTER(ctypes.wintypes.INT),ctypes.POINTER(ctypes.wintypes.INT),ctypes.POINTER(ctypes.wintypes.INT)]
-#    typedef BOOL (__cdecl *AERO_GetImage)(BITMAPINFOHEADER * pBuffer,int nType,int *nMax/*=NULL*/, int *nTotal/*=NULL*/,int *nCount/*=NULL*/, int *nFrame/*=NULL*/, int *nP/*=NULL*/, int *nBlackout/*=NULL*/);
+#        lib.AERO_GetImage.argtypes = [ctypes.POINTER(ctypes.wintypes.LPBYTE),ctypes.wintypes.INT,ctypes.POINTER(ctypes.wintypes.INT),ctypes.POINTER(ctypes.wintypes.INT),ctypes.POINTER(ctypes.wintypes.INT),ctypes.POINTER(ctypes.wintypes.INT),ctypes.POINTER(ctypes.wintypes.INT),ctypes.POINTER(ctypes.wintypes.INT)]
+#        if not lib.AERO_GetImage(img_buffer.ctypes.data_as(ctypes.POINTER(ctypes.wintypes.LPBYTE)),mode,None,None,None,None,None,None):
 
-        if not lib.AERO_GetImage(img_buffer.ctypes.data_as(ctypes.POINTER(ctypes.wintypes.LPBYTE)),mode,None,None,None,None,None,None):
+        lib.AERO_GetImageDataEx.argtypes = [ctypes.wintypes.INT,ctypes.POINTER(ctypes.c_uint8),ctypes.wintypes.INT]
+        if not lib.AERO_GetImageDataEx(camID, img_buffer.ctypes.data_as(ctypes.POINTER(ctypes.c_uint8)),mode):
+
             print("GetImage Error")
             return None
-     # read bmih
-        BMIH = struct.Struct("=IllHHIIllII")
-        bmih = BMIH.unpack(img_buffer[:40])
-        cBMIH.biSize = bmih[0]
-        cBMIH.biWidth = bmih[1]
-        cBMIH.biHeight = bmih[2]
-        cBMIH.biBitCount = bmih[4]
-        cBMIH.biSizeImage = bmih[6]
-        if mode ==0 :
-            deserialized_resized = img_buffer[40:camWidth*camHeight*3+40]
-            deserialized = np.reshape(deserialized_resized, newshape=(camHeight, camWidth,3))
-            deserialized = np.flipud(deserialized)
+        if mode ==7 :
+            bytes_per_pixel = 3  # 24bit BMP
+    # 画像データを (Height, Width, 3) にリシェイプ
+            deserialized_resized = np.frombuffer(img_buffer[0:camWidth*camHeight*bytes_per_pixel], dtype=np.uint8)
+            deserialized = np.reshape(deserialized_resized, newshape=(camHeight, camWidth, bytes_per_pixel))
+
+        # BMPの画像データは上下反転しているので修正
+            deserialized = np.flipud(deserialized).astype(np.uint8)
+#            deserialized = deserialized.astype(np.uint8)
         else:
-            deserialized_resized = img_buffer[40:camWidth*camHeight+40]
-            deserialized = np.reshape(deserialized_resized, newshape=(camHeight, camWidth,1))
+            deserialized_resized = np.frombuffer(img_buffer[0:camWidth*camHeight], dtype=np.uint8)
+            deserialized = np.reshape( deserialized_resized, newshape=(camHeight, camWidth,1)).astype(np.uint8)
+#            deserialized = deserialized.astype(np.uint8)
 
     else:
         cBMIH.biWidth = camWidth
@@ -606,7 +605,7 @@ def getPalmTrackResult():
     if os.name == "nt":
         HANDRESULT = struct.Struct("=iiiiiiiiiliiiiiiqqqqiiiiiiiiiiiiiiii")
 
-        sz = 40*4 # struct.calcsize(HANDRESULT)
+        sz = 60*4 # struct.calcsize(HANDRESULT)
         buffer = np.empty(sz*2,dtype=np.uint8)
         lib.AERO_GetHandObjects.argtypes = [ctypes.POINTER(ctypes.c_uint8)]
         lib.AERO_GetHandObjects(buffer.ctypes.data_as(ctypes.POINTER(ctypes.c_uint8)))
@@ -631,6 +630,7 @@ def getPalmTrackResult():
         return False
    
 # Linux
+
     HANDRESULT = struct.Struct("=iiiiiiiiLLii")
     sz = 48 #struct.calcsize("=iiiiiiiiiLLii") # 60 x2 
     buffer = np.empty(sz*2,dtype=np.uint8)
@@ -709,10 +709,7 @@ bEnableMJPEG = False
 # zdTable is required for 8bit/11bit depth map
 zdTableLen =0
 zdTable = [0]
-
-if bEnablePalmTrack:
-    camWidth=320
-    camHeight = 240
+nColorImage = 0 # 1:Color image 24bit bgr , 1: Grayscale 1bit
 
 #
 #  Allocate Image Buffers
@@ -798,7 +795,7 @@ if __name__ == "__main__":
       time.sleep(1)
 # Loop Start 
    bDepthRead = False         
-   for i in range(400):
+   while(1):
       if IsNewFrame():
 
            # Palm Tracking

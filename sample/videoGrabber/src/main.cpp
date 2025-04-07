@@ -361,12 +361,12 @@ static void mainloop(void)
 				continue;
 			errno_exit("select");
 		}
-
+/*
 		if (0 == r) {
 			fprintf(stderr, "select timeout\n");
 			exit(EXIT_FAILURE);
 		}
-
+*/
 		read_frame(cam);
 		//			break;
 		/* EAGAIN - continue select loop. */
@@ -431,7 +431,8 @@ int main(int argc, char **argv)
 	init_device(0);
 	printf("init device done\n");
 
-	getProperty(fd[0], V4L2_CID_BRIGHTNESS);
+	getProperty(fd[0], V4L2_CID_AUTO_WHITE_BALANCE);
+	getProperty(fd[0], V4L2_CID_EXPOSURE_AUTO);
 
 	start_capturing(0);
 	printf("start done\n");

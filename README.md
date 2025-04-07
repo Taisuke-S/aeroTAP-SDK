@@ -19,13 +19,18 @@ export LD_LIBRARY_PATH=/home/pi/aeroTAP/lib/linux_arm
 sudo apt install libusb-dev
 sudo apt install libudev-dev freeglut3-dev
 sudo apt install libv4l-dev
-sudo apt install libpng-dev libjpeg-dev
+sudo apt install libpng-dev libjpeg62-turbo-dev:armhf libjpeg62-turbo-dev
 
 sudo apt install cmake
 ```
 
 
 # Updates 
+#2025.4.07
+- Enable OpenMP
+- Fixed Open issue with raspberry Pi4 with GS Camera
+- Sample updated
+  added lib for Raspi5, raspi4 64bit to aarch64
 ##2022.8.18
 - Updated library for cam2web enhancement
 

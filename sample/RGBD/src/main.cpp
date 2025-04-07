@@ -52,6 +52,28 @@ void mouseClick(int button, int state, int x, int y)
 void display()
 {
 	// Delegate this action to example's main class
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);  // バッファをクリア
+
+	glLoadIdentity();  // モデルビュー行列をリセット
+
+    glEnable(GL_TEXTURE_2D);  // テクスチャの使用を有効化
+
+    // 頂点とテクスチャ座標
+    glBegin(GL_QUADS);  // 四角形を描く
+    glTexCoord2f(0.0f, 0.0f); glVertex2f(-1.0f, -1.0f);  // 左下
+    glTexCoord2f(1.0f, 0.0f); glVertex2f(1.0f, -1.0f);   // 右下
+    glTexCoord2f(1.0f, 1.0f); glVertex2f(1.0f, 1.0f);    // 右上
+    glTexCoord2f(0.0f, 1.0f); glVertex2f(-1.0f, 1.0f);   // 左上
+    glEnd();	
+    glDisable(GL_TEXTURE_2D);  // テクスチャの使用を無効化
+
+    glutSwapBuffers();  // バッファを入れ替え
+
+//	std::cout << "display!"  << std::endl;
+}
+
+void idle()
+{
 	bool update = sample.update();
 
 	if (!update)
@@ -62,13 +84,8 @@ void display()
 		exit(EXIT_FAILURE);
 	}
 
-	// Do flush and swap buffers to update viewport
-	glFlush();
-	glutSwapBuffers();
-}
+//	std::cout << "idle!"  << std::endl;
 
-void idle()
-{
 	glutPostRedisplay();
 }
 
@@ -79,8 +96,6 @@ void showHelpInfo()
 	std::cout << "Options: -j MJPG,  -u uSB2.0, -f Enable Post Filter \n"
 				 "Resolution: -r0 qvga, -r1 VGA, -r2 Wvga, -r3 HD\n" << std::endl;
 }
-
-
 
 int main(int argc, char* argv[])
 {
@@ -159,24 +174,23 @@ int main(int argc, char* argv[])
 	glutCreateWindow("aeroTAP Sample (aeroTAP API)");
 	//glutSetCursor(GLUT_CURSOR_NONE);
 
+	
+    // OpenGLの初期化
+	{
+		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);  // 背景色を黒に設定
+		glEnable(GL_DEPTH_TEST);  // 深度テストを有効にする
+		glMatrixMode(GL_PROJECTION);
+		glLoadIdentity();
+		gluOrtho2D(-1.0, 1.0, -1.0, 1.0);  // 2Dの正射影を設定
+		glMatrixMode(GL_MODELVIEW);
+	}	
+
 	// Connect GLUT callbacks
 	glutKeyboardFunc(keyboard);
 	glutDisplayFunc(display);
-	glutIdleFunc(idle);
 	glutMouseFunc(mouseClick);
 
-	// Setup OpenGL
-	glDisable(GL_DEPTH_TEST);
-	glEnable(GL_TEXTURE_2D);
-
-	glEnableClientState(GL_VERTEX_ARRAY);
-	glDisableClientState(GL_COLOR_ARRAY);
-
-
-	glOrtho(0, outputMode.xres, outputMode.yres, 0, -1.0, 1.0);
-	glMatrixMode(GL_PROJECTION);
-	glPushMatrix();
-	glLoadIdentity();
+	glutIdleFunc(idle);
 	
 	// Start main loop
 	glutMainLoop();

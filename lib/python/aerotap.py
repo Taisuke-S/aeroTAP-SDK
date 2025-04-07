@@ -7,9 +7,9 @@ Created on Tue May  9 23:24:01 2023
 
 """
 __author__ = "nextEDGE Technology"
-__copyright__ = "Copyright (C) 2023 nextEDGE Technology K.K."
+__copyright__ = "Copyright (C) 2023,2025 nextEDGE Technology K.K."
 __license__ = "Public Domain"
-__version__ = "1.1"
+__version__ = "1.4"
 
 import os
 import sys
@@ -122,16 +122,21 @@ def IsConnected():
     lib.aerotap_checkDevice.restype = ctypes.c_bool
     lib.aerotap_checkDevice.argtypes = [ctypes.c_void_p]
     if  not lib.aerotap_checkDevice(obj):
-	    return False;
-    return True;
+        return False
+    return True
     
 """
-def Init():
+def Init(deviceNo, FPS, mode):
     Initialize aeroTAP SDK with parameters
     returns True when it is ready
 """
-def Init():
+def Init(deviceNo,fps, mode):
     global lib,os,camID ,camMode,camFPS,bEnableMJPEG,nIsUSB30,bEnableDepthFilter
+
+    camID = deviceNo
+    camFPS = fps
+    camMode = mode
+
     if os.name == "nt":
         lib.InitAeroCam.restype = ctypes.wintypes.BOOL
         lib.InitAeroCam.argtypes = [ctypes.wintypes.HWND,ctypes.wintypes.UINT,ctypes.wintypes.INT,ctypes.wintypes.INT, ctypes.wintypes.LPBYTE,ctypes.wintypes.LPBYTE,ctypes.wintypes.LPBYTE, ctypes.c_uint32]
@@ -261,6 +266,24 @@ def LoadZDTable():
     zdTableLen = lib.aerotap_getZDTable(obj,zdTable)
     return zdTableLen
 
+"""
+def GetFocalLength()
+    GetFocalLength tpye of connected aeroTAP 3D USB Camera
+    w, h = GetFocalLength(nDevice)
+"""
+def GetFocalLength(camID):
+    global lib,obj,os ,camMode,camFPS
+
+    focalLengthW = ctypes.c_float()
+    focalLengthH = ctypes.c_float()
+    if os.name == "nt":
+        lib.AERO_GetFocalLength.argtypes = [ctypes.wintypes.INT,ctypes.POINTER(ctypes.wintypes.FLOAT),ctypes.POINTER(ctypes.wintypes.FLOAT)]
+        lib.AERO_GetFocalLength(camID, ctypes.byref(focalLengthW), ctypes.byref(focalLengthH))
+        return focalLengthW.value, focalLengthW.value
+
+    lib.AERO_GetFocalLength.argtypes = [ctypes.c_int, ctypes.POINTER(ctypes.c_float), ctypes.POINTER(ctypes.c_float)]
+    lib.AERO_GetFocalLength(camID, ctypes.byref(focalLengthW), ctypes.byref(focalLengthH))
+    return focalLengthW.value, focalLengthW.value
 
 """
 def GetPType()
@@ -374,7 +397,7 @@ def GetLastError():
 
 """
 def Read(mode)
-    Read color image from camera
+    Read color image from camera with BMP
     mode =0: Color Image, mode ==1: Grayscale
     returns np 3dim in BGR or 1dim Grayscale image
 """
@@ -386,8 +409,6 @@ def Read(mode):
     if os.name == "nt":
         lib.AERO_GetImage.restype = ctypes.wintypes.BOOL
         lib.AERO_GetImage.argtypes = [ctypes.POINTER(ctypes.wintypes.LPBYTE),ctypes.wintypes.INT,ctypes.POINTER(ctypes.wintypes.INT),ctypes.POINTER(ctypes.wintypes.INT),ctypes.POINTER(ctypes.wintypes.INT),ctypes.POINTER(ctypes.wintypes.INT),ctypes.POINTER(ctypes.wintypes.INT),ctypes.POINTER(ctypes.wintypes.INT)]
-#    typedef BOOL (__cdecl *AERO_GetImage)(BITMAPINFOHEADER * pBuffer,int nType,int *nMax/*=NULL*/, int *nTotal/*=NULL*/,int *nCount/*=NULL*/, int *nFrame/*=NULL*/, int *nP/*=NULL*/, int *nBlackout/*=NULL*/);
-
         if not lib.AERO_GetImage(img_buffer.ctypes.data_as(ctypes.POINTER(ctypes.wintypes.LPBYTE)),mode,None,None,None,None,None,None):
             print("GetImage Error")
             return None
@@ -399,13 +420,78 @@ def Read(mode):
         cBMIH.biHeight = bmih[2]
         cBMIH.biBitCount = bmih[4]
         cBMIH.biSizeImage = bmih[6]
+        pixel_offset = 40
         if mode ==0 :
-            deserialized_resized = img_buffer[40:camWidth*camHeight*3+40]
-            deserialized = np.reshape(deserialized_resized, newshape=(camHeight, camWidth,3))
+            bytes_per_pixel = 3  # 24bit BMP
+            img_size = cBMIH.biWidth * cBMIH.biHeight * bytes_per_pixel
+   # 画像データを NumPy 配列に変換
+            deserialized_resized = np.frombuffer(img_buffer[pixel_offset:pixel_offset + img_size], dtype=np.uint8)
+    # 画像データを (Height, Width, 3) にリシェイプ
+            deserialized = np.reshape(deserialized_resized, newshape=(cBMIH.biHeight, cBMIH.biWidth, 3))
+
+        # BMPの画像データは上下反転しているので修正
             deserialized = np.flipud(deserialized)
+            deserialized = deserialized.astype(np.uint8)
         else:
-            deserialized_resized = img_buffer[40:camWidth*camHeight+40]
-            deserialized = np.reshape(deserialized_resized, newshape=(camHeight, camWidth,1))
+            deserialized_resized = np.frombuffer(img_buffer[pixel_offset:pixel_offset + camWidth*camHeight], dtype=np.uint8)
+            deserialized = np.reshape(deserialized_resized, newshape=(camHeight, camWidth,1)).astpyr(np.uint8)
+#            deserialized = deserialized.astype(np.uint8)
+
+    else:
+        cBMIH.biWidth = camWidth
+        cBMIH.biHeight = camHeight
+        cBMIH.biBitCount = 24
+        cBMIH.biSizeImage = camWidth*camHeight*3
+        
+        if mode==0:
+            lib.aerotap_getColorData.restype = ctypes.POINTER(ctypes.c_uint8)
+            lib.aerotap_getColorData.argtypes = [ctypes.c_void_p]
+            deserialized = np.reshape(np.ctypeslib.as_array( lib.aerotap_getColorData(obj),shape=(1,camWidth*camHeight*3)), newshape=(camHeight, camWidth,3))
+            deserialized = deserialized[:,:,::-1] # to BGR
+        else:
+            lib.aerotap_getGrayData.restype = ctypes.POINTER(ctypes.c_uint8)
+            lib.aerotap_getGrayData.argtypes = [ctypes.c_void_p]
+            deserialized = np.reshape(np.ctypeslib.as_array( lib.aerotap_getGrayData(obj),shape=(1,camWidth*camHeight)), newshape=(camHeight, camWidth,1))
+    # RGB to BGR for OpenCV
+#    deserialized = np.fliplr(deserialized)
+#    print(deserialized.shape)
+
+    return deserialized
+
+
+"""
+def ReadImage(mode)
+    Read color image from camera
+    mode =7: Color Image, mode ==1: Grayscale
+    mode =11: Color Fliped, 
+    returns np 3dim in BGR or 1dim Grayscale image
+"""
+def ReadImage(mode):
+    global lib,obj,os,camID ,img_buffer,depth_buffer,camWidth,camHeight
+
+    if os.name == "nt":
+        lib.AERO_GetImage.restype = ctypes.wintypes.BOOL
+#        lib.AERO_GetImage.argtypes = [ctypes.POINTER(ctypes.wintypes.LPBYTE),ctypes.wintypes.INT,ctypes.POINTER(ctypes.wintypes.INT),ctypes.POINTER(ctypes.wintypes.INT),ctypes.POINTER(ctypes.wintypes.INT),ctypes.POINTER(ctypes.wintypes.INT),ctypes.POINTER(ctypes.wintypes.INT),ctypes.POINTER(ctypes.wintypes.INT)]
+#        if not lib.AERO_GetImage(img_buffer.ctypes.data_as(ctypes.POINTER(ctypes.wintypes.LPBYTE)),mode,None,None,None,None,None,None):
+
+        lib.AERO_GetImageDataEx.argtypes = [ctypes.wintypes.INT,ctypes.POINTER(ctypes.c_uint8),ctypes.wintypes.INT]
+        if not lib.AERO_GetImageDataEx(camID, img_buffer.ctypes.data_as(ctypes.POINTER(ctypes.c_uint8)),mode):
+
+            print("GetImage Error")
+            return None
+        if mode ==7 :
+            bytes_per_pixel = 3  # 24bit BMP
+    # 画像データを (Height, Width, 3) にリシェイプ
+            deserialized_resized = np.frombuffer(img_buffer[0:camWidth*camHeight*bytes_per_pixel], dtype=np.uint8)
+            deserialized = np.reshape(deserialized_resized, newshape=(camHeight, camWidth, bytes_per_pixel))
+
+        # BMPの画像データは上下反転しているので修正
+            deserialized = np.flipud(deserialized).astype(np.uint8)
+#            deserialized = deserialized.astype(np.uint8)
+        else:
+            deserialized_resized = np.frombuffer(img_buffer[0:camWidth*camHeight], dtype=np.uint8)
+            deserialized = np.reshape( deserialized_resized, newshape=(camHeight, camWidth,1)).astype(np.uint8)
+#            deserialized = deserialized.astype(np.uint8)
 
     else:
         cBMIH.biWidth = camWidth
@@ -449,15 +535,19 @@ def ReadDepth():
 
     # Windows    
     lib.AERO_GetImage.restype = ctypes.wintypes.BOOL
-#    lib.AERO_GetImage.argtypes = [ctypes.POINTER(ctypes.wintypes.LPBYTE),ctypes.wintypes.INT,ctypes.POINTER(ctypes.wintypes.INT),ctypes.POINTER(ctypes.wintypes.INT),ctypes.POINTER(ctypes.wintypes.INT),ctypes.POINTER(ctypes.wintypes.INT),ctypes.POINTER(ctypes.wintypes.INT),ctypes.POINTER(ctypes.wintypes.INT)]
-    lib.AERO_GetImage.argtypes = [ctypes.POINTER(ctypes.c_uint8),ctypes.wintypes.INT,ctypes.POINTER(ctypes.wintypes.INT),ctypes.POINTER(ctypes.wintypes.INT),ctypes.POINTER(ctypes.wintypes.INT),ctypes.POINTER(ctypes.wintypes.INT),ctypes.POINTER(ctypes.wintypes.INT),ctypes.POINTER(ctypes.wintypes.INT)]
+#    lib.AERO_GetImage.argtypes = [ctypes.POINTER(ctypes.c_uint8),ctypes.wintypes.INT,ctypes.POINTER(ctypes.wintypes.INT),ctypes.POINTER(ctypes.wintypes.INT),ctypes.POINTER(ctypes.wintypes.INT),ctypes.POINTER(ctypes.wintypes.INT),ctypes.POINTER(ctypes.wintypes.INT),ctypes.POINTER(ctypes.wintypes.INT)]
 #    typedef BOOL (__cdecl *AERO_GetImage)(BITMAPINFOHEADER * pBuffer,int nType,int *nMax/*=NULL*/, int *nTotal/*=NULL*/,int *nCount/*=NULL*/, int *nFrame/*=NULL*/, int *nP/*=NULL*/, int *nBlackout/*=NULL*/);
-
-    if not lib.AERO_GetImage(depth_buffer.ctypes.data_as(ctypes.POINTER(ctypes.c_uint8)),9,None,None,None,None,None,None):
+#    if not lib.AERO_GetImage(depth_buffer.ctypes.data_as(ctypes.POINTER(ctypes.c_uint8)),9,None,None,None,None,None,None):
+    lib.AERO_GetImageDataEx.argtypes = [ctypes.wintypes.INT,ctypes.POINTER(ctypes.c_uint8),ctypes.wintypes.INT]
+    mode = 8
+    # set mode = 9 for RAW if camMode != 12 
+    if camMode !=12:
+      mode =9
+    if not lib.AERO_GetImageDataEx(camID,depth_buffer.ctypes.data_as(ctypes.POINTER(ctypes.c_uint8)),mode):
         print("GetDepthImage Error")
         return None
-
-    depth16 = np.frombuffer(depth_buffer[40:camWidth*camHeight*2+40],dtype=np.uint16)
+ 
+    depth16 = np.frombuffer(depth_buffer[0:camWidth*camHeight*2],dtype=np.uint16)
 
     return depth16
 
@@ -468,31 +558,12 @@ def DepthToRGB(depth):
     returns color image in np dmin=3  BGR
 """
 def DepthToRGB(depth):
-    global lib,camID ,os, imgDepth,depth_buffer,camWidth,camHeight,bEnableDepthFilter ,camMode,ColorPalette
+    global lib,camID ,os, imgDepth,depth_buffer,camWidth,camHeight,bEnableDepthFilter ,camMode,ColorPalette 
 
-#    deserialized = np.reshape(np.frombuffer(depth.tobytes(),dtype=np.uint8),newshape=(camHeight,camWidth,2))
-#    imgDepth[:,:,1:3] = deserialized
-#    return None
-# Faster using Dictionary
-    depth2 =np.array( [ColorLookup[value] for value in depth],dtype=np.uint32)
-    deserialized = np.reshape(np.frombuffer(depth2.tobytes(),dtype=np.uint8),newshape=(camHeight,camWidth,4))
-    imgDepth[:,:,0:3] = deserialized[:,:,1:4]
-    return None
-
-# Slow when coverting using ColorPalette table
-#    depth =np.array( [ColorPalette[value] for value in depth],dtype=np.uint16)
-#    imgDepth = np.reshape(np.frombuffer(depth.tobytes(),dtype=np.uint8),newshape=(camHeight,camWidth,4))
-#    imgDepth[:,:,0:3] = deserialized[:,:,0:3]
-    return None
+    rgb_image = ColorPalette[depth]
+    rgb_image = rgb_image.reshape((camHeight, camWidth, 3))
+    return rgb_image
     
-# or     
-#    for i,value in enumerate(depth):
-#        if value>0 and value<16384:
-#            depth[i] = ColorPalette[value]
-#    deserialized = np.reshape(np.frombuffer(depth,dtype=np.uint8),newshape=(camHeight,camWidth,2))
-#    imgDepth[:,:,1:3] = deserialized
-#    return None
-
     
 """
 def UpdateFrame():
@@ -518,7 +589,10 @@ def UpdateFrame():
 if os.name == "nt":
     cwd = os.path.dirname(__file__)
     os.environ['PATH'] = cwd + ';' + os.environ['PATH']
-    aerodll = os.path.join(cwd, "aeroTAP_CAM.dll")
+    # load basic version
+#    aerodll = os.path.join(cwd, "aeroTAP_CAM.dll")
+    # load OpenMP enabled version
+    aerodll = os.path.join(cwd, "aeroTAP_CAMMP.dll")
     envKeys = list()
     for k, v in os.environ.items():
         envKeys.append(k)
@@ -527,13 +601,13 @@ if os.name == "nt":
             raise ValueError("NoDLL")
         lib = ctypes.WinDLL(aerodll)
     except (KeyError, ValueError):
-        print("Error loading aeroTAPA_CAM.DLL {ValueError}")
+        print("Error loading aeroTAP_CAM.DLL ,ValueError")
 else:
     lib = ctypes.CDLL("./libaeroTAP-sdk.so")
     lib.aerotap_create.restype = c_void_p
     obj = lib.aerotap_create()
 
-print("Loaded aeroTAPA_CAM.DLL")
+print("Loaded aeroTAP_CAM.DLL")
 
 BMlen = 40 #sys.getsizeof(BITMAPINFOHEADER())
 #print(BMlen)
@@ -553,7 +627,7 @@ nPType =-1 # Product Type
 # Enble/Distable HW PostProcess only for aeroTAP 3D USB G2 camera
 bEnableHWPostProcess = True
 # Enble/Distable Simple Depth Poast Process
-bEnableDepthFilter = True
+bEnableDepthFilter = False
 # Enble MJPEG streaming for Color Image. Only for USB2.0 mode
 bEnableMJPEG = False
 # zdTable is required for 8bit/11bit depth map
@@ -566,24 +640,16 @@ cBMIH = BITMAPINFOHEADER()
 cHandResult = HandResult()
 
 img_buffer = np.empty(1280*720*3+BMlen,dtype=np.uint8)
-depth_buffer = np.empty(1280*720*2+BMlen,dtype=np.uint8)
+depth_buffer = np.empty(1280*720*2,dtype=np.uint8)
 
 ColorPalette = ZDColorPalette.BuildColorPaletteValue()
-ColorIndex = np.array(range(16384))
-ColorLookup = {}
-for A, B in zip(ColorIndex, ColorPalette):
-    ColorLookup[A] = B
-# 
-#
 
-if __name__ == "__main__":
-    
-   if os.name == "nt":
-       if not IsConnected():
-            raise ValueError("Error aeroTAP camera is not connected")
+# setup
+def getCamModeAndType():
+    global os,nPType,camMode,nIsUSB30,bEnableMJPEG
 
-   nPType = GetPType()
-   if nPType ==8: 
+    nPType = GetPType()
+    if nPType ==8: 
      camMode = 11 # 11Bit
      camWidth = 1280
      camHeight = 720
@@ -592,22 +658,26 @@ if __name__ == "__main__":
      bEnableDepthFilter = False;
      # always eable HE Postprocess
      EnableHWPostProcess(bEnableHWPostProcess)
-   elif nPType ==3:
+    elif nPType ==3:
      camMode = 12 # 14Bit
      print("Running aeroTAP 3D USB G2 Camera")
      # always eable HE Postprocess
      EnableHWPostProcess(bEnableHWPostProcess)
-   elif nPType ==0:
+    elif nPType ==0:
      print("Running aeroTAP 3D USB G1 Camera")
-   elif nPType ==1:
+    elif nPType ==1:
      camMode = 12 # 14Bit
      print("Running aeroTAP 3D USB GS Camera")
 
+    if os.name == "nt":
+       if not IsConnected():
+            raise ValueError("Error aeroTAP camera is not connected")
+
    # if USB mode is not defined by user
-   if os.name == "nt":
+    if os.name == "nt":
        if nIsUSB30 ==0:
           nIsUSB30 = IsUSB30()
-   else:
+    else:
        if nIsUSB30 ==0:
           lib.aerotap_getUSB20.argtypes = [ctypes.c_void_p]
           if lib.aerotap_getUSB20(obj):
@@ -616,38 +686,48 @@ if __name__ == "__main__":
               nIsUSB30 = 2 # USB 3.0
        
        
-   if nIsUSB30 ==1:
+    if nIsUSB30 ==1:
      # fore to enable MJPEG mode when USB20 is used
      bEnableMJPEG = True
      print("Connecting to USB2.0")
-   elif nPType ==2:
+    elif nPType ==2:
      print("Connecting to USB3.0")
 
-   if bEnableMJPEG:
+    if bEnableMJPEG:
      camMode = 110 # bEnableMJPEG
 
-   if not Init():
-     raise ValueError("Error aeroInit")
+    return True
+# 
+#
 
+if __name__ == "__main__":
+
+   # Check camera connection and get camera type and mode
+   if not getCamModeAndType():
+     raise ValueError("Camera detection Error")
+   # Initialize camera 
+   if not Init(camID,camFPS,camMode):
+     raise ValueError("Error aeroInit")
    
    EnableDepthFilter(bEnableDepthFilter)
    print("Starting camera...")      
    if not StartCam(camWidth,camHeight):
      raise ValueError("Camera Start Error")
-      
-   imgDepth = np.full((camHeight,camWidth,3),0,dtype=np.uint8)
 
+   print("Starting camera...type 'Q' to terminate.")      
+      
 # wait for 1st frame
    for i in range(100):
       if IsNewFrame():
-          img = Read(nColorImage)
+#          img = Read(nColorImage)
+          img = ReadImage(7)
 #          depth = ReadDepth()
           UpdateFrame()
           print("width = ",cBMIH.biWidth," height= ",cBMIH.biHeight ," imageSize = ", cBMIH.biSizeImage)
           break;
       time.sleep(1)
 # Loop Start          
-   for i in range(200):
+   while(1):
       if IsNewFrame():
 
            img = Read(nColorImage)   # Color Image
@@ -659,7 +739,7 @@ if __name__ == "__main__":
                cv2.imshow( "aeroTAP camera View", img )
            if( not (depth is None) ):
            # convert depth map to bgr ColorImage
-               DepthToRGB(depth)
+               imgDepth = DepthToRGB(depth)
                cv2.imshow( "aeroTAP camera DepthMap", imgDepth )
            key = cv2.waitKey(1)
            if key == ord("q"):
